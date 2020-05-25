@@ -1,6 +1,6 @@
 context("Continuous Supervised Regression Works")
 
-fit_linear <- lm(Sepal.Length ~ . - 1, iris)
+fit_linear <- lm(Sepal.Length ~ ., iris)
 flp <- predict(fit_linear, iris)
 
 dlr(iris, Sepal.Length ~ . - 1)
