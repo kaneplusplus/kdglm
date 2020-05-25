@@ -1,0 +1,18 @@
+Package: dlr
+Title: Deep Learning Supervised and Unsupervised Models for Rectangular Data
+Version: 0.0.1
+Authors@R: c(
+  person(given = "Michael J.",
+         family = "Kane",
+         email = "michael.kane@yale.edu",
+         role = c("aut", "cre"),
+         comment = c(ORCID = "http://orcid.org/0000-0003-1899-6662")))
+Description: Package dlsu implements easily configurable, commonly used deep learning supervised and unsupervised models for rectangular data.
+License: Apache License (>= 2.0)
+Encoding: UTF-8
+LazyData: true
+Imports:
+  fu
+Suggests: 
+  testthat
+RoxygenNote: 7.1.0
