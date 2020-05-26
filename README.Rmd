@@ -63,7 +63,7 @@ library(ggplot2)
 library(dplyr)
 
 iris %>% 
-  latent_space_embedding(fit_dlmc) %>%
+  metric_space_embedding(fit_dlmc) %>%
   `colnames<-`(c("X", "Y")) %>%
   as_tibble() %>%
   mutate(Species = iris$Species) %>%

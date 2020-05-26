@@ -64,7 +64,7 @@ library(dplyr)
 #>     intersect, setdiff, setequal, union
 
 iris %>% 
-  latent_space_embedding(fit_dlmc) %>%
+  metric_space_embedding(fit_dlmc) %>%
   `colnames<-`(c("X", "Y")) %>%
   as_tibble() %>%
   mutate(Species = iris$Species) %>%

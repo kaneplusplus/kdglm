@@ -138,7 +138,7 @@ dlr <- function(data,
 
 #' @importFrom keras get_weights
 #' @export
-latent_space_embedding <- function(x, model, 
+metric_space_embedding <- function(x, model, 
   layer = length(model$hidden_layers)) {
 
   mm <- model.matrix(model$form, 
