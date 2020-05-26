@@ -1,7 +1,7 @@
 context("Continuous Supervised Regression Works")
 
 fit_linear <- lm(Sepal.Length ~ ., iris)
-sd(predict(fit_linear, iris))
+sd(iris$Sepal.Length - predict(fit_linear, iris))
 
 m1 <- dlr(iris, Sepal.Length ~ ., hidden_layers = c(24, 2),
           verbose = TRUE, epochs = 1000)

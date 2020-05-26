@@ -42,6 +42,7 @@ dlr_predict.categorical_dlr <- function(data, dlr_model, type = "factor") {
   res
 }
 
+#' Create a Supervised Deep Learning Model
 #' @importFrom fu make_variable_desc
 #' @importFrom keras keras_model_sequential layer_dense %>% compile fit
 #' optimizer_adadelta

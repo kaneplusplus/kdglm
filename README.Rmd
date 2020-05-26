@@ -1,0 +1,74 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# dlm
+
+<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+<!-- badges: end -->
+
+The goal of dlm is to ...
+
+## Installation
+
+You can install the development version of this package from 
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("kaneplusplus/dlm")
+```
+
+## Regression onto a categorical variable
+
+```{r}
+library(keras)
+library(dlm)
+
+# Regress iris variables onto Species (categorical) and get the accuracy.
+fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16)
+sum(iris$Species == dlr_predict(iris, fit_dlmcat)) / nrow(iris)
+```
+
+## Regression onto a continous variable
+
+```{r example}
+# Regress iris variables onto Sepal.Length using a linear model and get the 
+# in-sample prediction accuracy.
+fit_linear <- lm(Sepal.Length ~ ., iris)
+sd(predict(fit_linear, iris))
+
+# Perform the same operation with a deep learner with two hidden layers
+# with 24 and 2 nodes respectively.
+fit_dlmc <- dlr(iris, Sepal.Length ~., hidden_layers = c(24, 2))
+sd(iris$Sepal.Length - dlr_predict(iris, fit_dlmc))
+```
+
+## Visualize the iris data in latent position from the first regression
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+iris %>% 
+  latent_space_embedding(fit_dlmc) %>%
+  `colnames<-`(c("X", "Y")) %>%
+  as_tibble() %>%
+  mutate(Species = iris$Species) %>%
+  ggplot(aes(x = X, y = Y, color = Species)) +
+    geom_point() +
+    theme_bw()
+
+```
