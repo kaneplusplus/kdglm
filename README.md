@@ -28,9 +28,9 @@ library(keras)
 library(dlm)
 
 # Regress iris variables onto Species (categorical) and get the accuracy.
-fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16)
+fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16, epochs = 2000)
 sum(iris$Species == dlr_predict(iris, fit_dlmcat)) / nrow(iris)
-#> [1] 0.7466667
+#> [1] 0.8066667
 ```
 
 ## Regression onto a continous variable
@@ -46,7 +46,7 @@ sd(predict(fit_linear, iris))
 # with 24 and 2 nodes respectively.
 fit_dlmc <- dlr(iris, Sepal.Length ~., hidden_layers = c(24, 2))
 sd(iris$Sepal.Length - dlr_predict(iris, fit_dlmc))
-#> [1] 0.3224505
+#> [1] 0.3140077
 ```
 
 ## Visualize the iris data in latent position from the first regression

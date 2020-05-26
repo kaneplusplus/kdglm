@@ -38,7 +38,7 @@ library(keras)
 library(dlm)
 
 # Regress iris variables onto Species (categorical) and get the accuracy.
-fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16)
+fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16, epochs = 2000)
 sum(iris$Species == dlr_predict(iris, fit_dlmcat)) / nrow(iris)
 ```
 
