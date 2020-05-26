@@ -33,6 +33,7 @@ to_one_hot.default <- function(x, oh) {
   stop(red("Argument oh is not of type one_hot."))
 }
 
+#' @importFrom keras to_categorical
 #' @importFrom crayon red
 #' @export
 to_one_hot.one_hot <- function(x, oh) {

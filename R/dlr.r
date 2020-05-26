@@ -1,22 +1,45 @@
 
 #' @export
-dlm_predict <- function(data, dlr_model, type) {
-  UseMethod("dlm_predict", dlr_model)
+dlr_predict <- function(data, dlr_model, type) {
+  UseMethod("dlr_predict", dlr_model)
 }
 
 #' @export
-dlm_predict.default <- function(data, dlr_model, type) {
+dlr_predict.default <- function(data, dlr_model, type) {
   stop(red("Don't know how to predict with model of type",
            paste0(class(dlr_model), collapse = " ")))
 }
 
 #' @export
-dlm_predict.continuous_dlr <- function(data, dlr_model, 
-                                       type = c("factor", "one-hot")) {
+dlr_predict.continuous_dlr <- function(data, dlr_model, type = NULL) {
+
+  mm <- model.matrix(dlr_model$form, 
+                     model.frame(dlr_model$form, 
+                                 data[,dlr_model$var_desc$name,
+                                      drop = FALSE]))
+  predict(dlr_model$model, mm)
 }
 
 #' @export
-dlm_predict.categorical_dlf <- function(data, dlr_model, type = NULL) {
+predict.dlr <- function(object, newdata, type = "factor") {
+  dlr_predict(newdata, object, type)
+}
+
+#' pre
+
+#' @export
+dlr_predict.categorical_dlr <- function(data, dlr_model, type = "factor") {
+  mm <- model.matrix(dlr_model$form, 
+                     model.frame(dlr_model$form, 
+                                 data[,dlr_model$var_desc$name,
+                                      drop = FALSE]))
+  res <- predict(dlr_model$model, mm)
+  var_desc <- dlr_model$var_desc
+  colnames(res) <- var_desc$levels[var_desc$role == "dependent"][[1]]
+  if (type == "factor") {
+    res <- colnames(res)[apply(res, 1, which.max)]
+  }
+  res
 }
 
 #' @importFrom fu make_variable_desc
@@ -26,10 +49,10 @@ dlm_predict.categorical_dlf <- function(data, dlr_model, type = NULL) {
 dlr <- function(data, 
                 form, 
                 hidden_layers = integer(), 
-                categorical_loss = "categorical_crossentropy",
+                categorical_loss = "mse",
                 continuous_loss = "mse",
                 optimizer = optimizer_adadelta(),
-                metrics = "accuracy",
+                metrics = c("accuracy", "mean_squared_error"),
                 batch_size = nrow(data),
                 epochs = 1000,
                 verbose = FALSE,
@@ -41,11 +64,8 @@ dlr <- function(data,
   var_desc <- make_variable_desc(xf, form)
 
   check_only_one_dependent_var(var_desc)
-
   check_at_least_one_indep_var(var_desc)
-
   conditional_not_yet_supported(var_desc)
-
   check_dependent_types(var_desc, c("numeric", "factor"))
 
   x_train <- model.matrix(form, xf)
@@ -56,10 +76,12 @@ dlr <- function(data,
     if (i == 1) {
       model %>% layer_dense(input_shape = ncol(x_train),
                             units = hidden_layers[i],
-                            name = paste("hidden_layer", i, sep = "_"))
+                            name = paste("hidden_layer", i, sep = "_"),
+                            use_bias = FALSE)
     } else {
       model %>% layer_dense(units = hidden_layers[i], 
-                            name = paste("hidden_layer", i, sep = "_"))
+                            name = paste("hidden_layer", i, sep = "_"),
+                            use_bias = FALSE)
     }
   }
 
@@ -67,7 +89,7 @@ dlr <- function(data,
 
     output_activation <- "softmax"
     # Are the encodings other than one-hot to consider?  
-    oh <- make_one_hot(xf[[var_desc$var_name[var_desc$role == "dependent"]]])
+    oh <- make_one_hot(xf[[var_desc$name[var_desc$role == "dependent"]]])
 
     input_shape <- NULL
     if (length(hidden_layers) == 0) {
@@ -78,12 +100,13 @@ dlr <- function(data,
       layer_dense(
           units=length(var_desc$levels[var_desc$role == "dependent"][[1]]),
           input_shape = input_shape,
-          name = paste(output_activation, "output", sep = "_"))
+          name = paste(output_activation, "output", sep = "_"),
+          use_bias = FALSE)
     
     type <- "categorical_dlr"
     loss <- categorical_loss
     y_train <- 
-      to_one_hot(xf[[var_desc$var_name[var_desc$role == "dependent"]]],
+      to_one_hot(xf[[var_desc$name[var_desc$role == "dependent"]]],
                    oh)
   } else {
     input_shape <- NULL
@@ -92,11 +115,12 @@ dlr <- function(data,
     }
 
     model %>% 
-      layer_dense(units = 1, input_shape = input_shape, name = "linear_output")
+      layer_dense(units = 1, input_shape = input_shape, 
+                  name = "linear_output", use_bias = FALSE)
 
     type <- "continuous_dlr"
     loss <- continuous_loss
-    y_train <- as.matrix(xf[[var_desc$var_name[var_desc$role == "dependent"]]])
+    y_train <- as.matrix(xf[[var_desc$name[var_desc$role == "dependent"]]])
   }
 
   mm_col_names <- colnames(x_train)
@@ -111,3 +135,32 @@ dlr <- function(data,
   ret
 }
 
+#' @importFrom keras get_weights
+#' @export
+latent_space_embedding <- function(x, model, 
+  layer = length(model$hidden_layers)) {
+
+  mm <- model.matrix(model$form, 
+                     model.frame(model$form, 
+                                 x[,model$var_desc$name,
+                                      drop = FALSE]))
+  
+  if (layer > 0 && length(model$hidden_layers) > 0) {
+    lsm <- keras_model(inputs = model$model$inputs, 
+      outputs = get_layer(model$model, 
+                          paste("hidden_layer", layer, sep ="_"))$output)
+    pmm <- predict(lsm, mm)
+  } else if (layer == 0) {
+    pmm <- mm
+  } else {
+    stop(red("Invalid layer."))
+  }
+  last_weights <- get_weights(model$model)[[layer + 1]]
+  ret <- Reduce(cbind, 
+         Map(function(j) sweep(pmm, 2, last_weights[,j], FUN = `*`), 
+             seq_len(ncol(last_weights))))
+  dimnames(ret) <- NULL
+  attributes(ret)$assign <- NULL
+  attributes(ret)$contrasts <- NULL
+  ret
+}

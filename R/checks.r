@@ -17,7 +17,7 @@ conditional_not_yet_supported <- function(x) {
   }
 }
 
-check_dependent <- function(x, dependent_types) {
+check_dependent_types <- function(x, dependent_types) {
   if (!any(x$class[x$role == "dependent"] %in% dependent_types)) {
     stop(red("Unsupported dependent variable type:",
              class(x$class[var_desc$role == "dependent"])))
