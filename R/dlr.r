@@ -125,13 +125,16 @@ dlr <- function(data,
   }
 
   mm_col_names <- colnames(x_train)
-  model %>% 
-    compile(loss = loss, optimizer = optimizer, metrics = "accuracy") %>%
+  model %>% compile(loss = loss, optimizer = optimizer, metrics = "accuracy") 
+  history <- model%>%
     fit(x_train, y_train, batch_size = batch_size, epochs = epochs,
         validation_split = validation_split, verbose = verbose)
 
   ret <- list(form = form, hidden_layers = hidden_layers, loss = loss,
-              var_desc = var_desc, model = model, mm_col_names = mm_col_names)
+              var_desc = var_desc, 
+              model = model, 
+              history = history,
+              mm_col_names = mm_col_names)
   class(ret) <- c(type, "dlr")
   ret
 }
@@ -164,4 +167,75 @@ metric_space_embedding <- function(x, model,
   attributes(ret)$assign <- NULL
   attributes(ret)$contrasts <- NULL
   ret
+}
+
+#' @export
+plot_training_history <- function(x) {
+  UseMethod("plot_training_history", x)
+}
+
+#' @importFrom crayon red
+#' @export
+plot_training_history.default <- function(x) {
+  print(red("Don't know how to plot training history for an object of type:",
+            paste(class(x), collapse = " ")))
+}
+
+#' @importFrom ggplot2 ggplot aes aes_ geom_point scale_shape theme_bw 
+#' theme_minimal
+#' @importFrom tools toTitleCase
+#' @export
+plot_training_history.dlr <- function(x, metrics = NULL, 
+    smooth = getOption("keras.plot.history.smooth", TRUE), 
+    theme_bw = FALSE) {
+
+  df <- as.data.frame(x$history)
+  if (is.null(metrics))
+      metrics <- Filter(function(name) !grepl("^val_", name),
+          names(x$history$metrics))
+  df <- df[df$metric %in% metrics, ]
+  if (tensorflow::tf_version() < "2.2") {
+      do_validation <- x$history$params$do_validation
+  } else {
+    do_validation <- any(grepl("^val_", names(x$history$metrics)))
+  
+  browser()}
+  names(df) <- toTitleCase(names(df))
+  df$Metric <- toTitleCase(as.character(df$Metric))
+  df$Data <- toTitleCase(as.character(df$Data))
+
+  int_breaks <- function(x) pretty(x)[pretty(x)%%1 == 0]
+  if (do_validation) {
+    if (theme_bw) {
+      p <- ggplot(df, 
+                  aes_(~Epoch, ~Value, color = ~Data, fill = ~Data, 
+                       linetype = ~Data, shape = ~Data))
+    } else {
+      p <- ggplot(df, aes_(~Epoch, ~Value, color = ~Data, fill = ~Data))
+    }
+  } else {
+    p <- ggplot(df, ggplot2::aes_(~Epoch, ~Value))
+  }
+  smooth_args <- list(se = FALSE, method = "loess", na.rm = TRUE)
+  if (theme_bw) {
+    smooth_args$size <- 0.5
+    smooth_args$color <- "gray47"
+    p <- p + 
+      theme_bw() + 
+      geom_point(col = 1, na.rm = TRUE, size = 2) + 
+      scale_shape(solid = FALSE)
+  }
+  else {
+    p <- p + geom_point(shape = 21, col = 1, na.rm = TRUE)
+  }
+  if (smooth && x$history$params$epochs >= 10) {
+    p <- p + do.call(geom_smooth, smooth_args)
+  }
+  p + facet_grid(Metric ~ ., switch = "y", scales = "free_y") + 
+    scale_x_continuous(breaks = int_breaks) +
+    theme_minimal() +
+    theme(axis.title.y = element_blank(),
+          strip.placement = "outside", 
+          strip.text = element_text(colour = "black", size = 11), 
+          strip.background = ggplot2::element_rect(fill = NA, color = NA))
 }
