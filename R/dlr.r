@@ -139,9 +139,21 @@ dlr <- function(data,
   ret
 }
 
+#' @export
+metric_space_embedding <- function(x, model, layer) {
+  UseMethod("metric_space_embedding", model)
+}
+
+#' @importFrom crayon red
+#' @export
+metric_space_embedding.default <- function(x, model, layer) {
+  stop(red("Don't know how to calculate metric space embedding for an object ",
+           "of type: ", paste(class(x), collapse = " ")))
+}
+
 #' @importFrom keras get_weights
 #' @export
-metric_space_embedding <- function(x, model, 
+metric_space_embedding.dlr <- function(x, model, 
   layer = length(model$hidden_layers)) {
 
   mm <- model.matrix(model$form, 
@@ -198,8 +210,8 @@ plot_training_history.dlr <- function(x, metrics = NULL,
       do_validation <- x$history$params$do_validation
   } else {
     do_validation <- any(grepl("^val_", names(x$history$metrics)))
+  }
   
-  browser()}
   names(df) <- toTitleCase(names(df))
   df$Metric <- toTitleCase(as.character(df$Metric))
   df$Data <- toTitleCase(as.character(df$Data))
@@ -237,5 +249,5 @@ plot_training_history.dlr <- function(x, metrics = NULL,
     theme(axis.title.y = element_blank(),
           strip.placement = "outside", 
           strip.text = element_text(colour = "black", size = 11), 
-          strip.background = ggplot2::element_rect(fill = NA, color = NA))
+          strip.background = element_rect(fill = NA, color = NA))
 }
