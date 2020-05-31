@@ -1,4 +1,4 @@
-context("Continuous Supervised Regression Works")
+context("Tests that need to be cleaned up.")
 
 fit_linear <- lm(Sepal.Length ~ ., iris)
 sd(iris$Sepal.Length - predict(fit_linear, iris))
