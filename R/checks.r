@@ -20,6 +20,12 @@ conditional_not_yet_supported <- function(x) {
 check_dependent_types <- function(x, dependent_types) {
   if (!any(x$class[x$role == "dependent"] %in% dependent_types)) {
     stop(red("Unsupported dependent variable type:",
-             class(x$class[var_desc$role == "dependent"])))
+             class(x$class[x$role == "dependent"])))
+  }
+}
+
+check_hidden_layers <- function(hidden_layers, hidden_layers_activation) {
+  if (length(hidden_layers) != length(hidden_layers_activation)) {
+    stop(red("hidden_layers and their activation must have the same length."))
   }
 }

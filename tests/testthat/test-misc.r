@@ -11,7 +11,7 @@ sd(iris$Sepal.Length - dlr_predict(iris, m1))
 library(dplyr)
 library(ggplot2)
 
-latent_space_embedding(iris, m1) %>%
+metric_space_embedding(iris, m1) %>%
   `colnames<-`(c("x1", "x2")) %>%
   as_tibble() %>%
   mutate(species = iris$Species) %>%

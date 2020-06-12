@@ -10,6 +10,7 @@ dlr_predict.default <- function(data, dlr_model, type) {
            paste0(class(dlr_model), collapse = " ")))
 }
 
+#' @importFrom stats model.frame model.matrix predict
 #' @export
 dlr_predict.continuous_dlr <- function(data, dlr_model, type = NULL) {
 
@@ -25,8 +26,7 @@ predict.dlr <- function(object, newdata, type = "factor") {
   dlr_predict(newdata, object, type)
 }
 
-#' pre
-
+#' @importFrom stats model.frame model.matrix predict
 #' @export
 dlr_predict.categorical_dlr <- function(data, dlr_model, type = "factor") {
   mm <- model.matrix(dlr_model$form, 
@@ -50,6 +50,8 @@ dlr_predict.categorical_dlr <- function(data, dlr_model, type = "factor") {
 dlr <- function(data, 
                 form, 
                 hidden_layers = integer(), 
+                hidden_layers_activation = 
+                  rep("linear", length(hidden_layers)),
                 categorical_loss = "mse",
                 continuous_loss = "mse",
                 optimizer = optimizer_adadelta(),
@@ -68,8 +70,10 @@ dlr <- function(data,
   check_at_least_one_indep_var(var_desc)
   conditional_not_yet_supported(var_desc)
   check_dependent_types(var_desc, c("numeric", "factor"))
+  check_hidden_layers
 
   x_train <- model.matrix(form, xf)
+  mm_column_var_assign <- attributes(x_train)$assign
 
   model <- keras_model_sequential(name = name) 
 
@@ -77,10 +81,12 @@ dlr <- function(data,
     if (i == 1) {
       model %>% layer_dense(input_shape = ncol(x_train),
                             units = hidden_layers[i],
+                            activation = hidden_layers_activation[i],
                             name = paste("hidden_layer", i, sep = "_"),
                             use_bias = FALSE)
     } else {
       model %>% layer_dense(units = hidden_layers[i], 
+                            activation = hidden_layers_activation[i],
                             name = paste("hidden_layer", i, sep = "_"),
                             use_bias = FALSE)
     }
@@ -102,7 +108,8 @@ dlr <- function(data,
           units=length(var_desc$levels[var_desc$role == "dependent"][[1]]),
           input_shape = input_shape,
           name = paste(output_activation, "output", sep = "_"),
-          use_bias = FALSE)
+          activation = output_activation,
+          use_bias = FALSE) 
     
     type <- "categorical_dlr"
     loss <- categorical_loss
@@ -125,12 +132,16 @@ dlr <- function(data,
   }
 
   mm_col_names <- colnames(x_train)
-  model %>% compile(loss = loss, optimizer = optimizer, metrics = "accuracy") 
-  history <- model%>%
+  model %>% compile(loss = loss, optimizer = optimizer, metrics = metrics) 
+  history <- model %>%
     fit(x_train, y_train, batch_size = batch_size, epochs = epochs,
         validation_split = validation_split, verbose = verbose)
 
-  ret <- list(form = form, hidden_layers = hidden_layers, loss = loss,
+  ret <- list(form = form, 
+              hidden_layers = hidden_layers, 
+              hidden_layers_activation = hidden_layers_activation,
+              mm_column_var_assign <- mm_column_var_assign,
+              loss = loss,
               var_desc = var_desc, 
               model = model, 
               history = history,
@@ -144,11 +155,12 @@ metric_space_embedding <- function(x, model, layer) {
   UseMethod("metric_space_embedding", model)
 }
 
+#' @importFrom keras keras_model get_layer get_weights
 #' @importFrom crayon red
 #' @export
 metric_space_embedding.default <- function(x, model, layer) {
-  stop(red("Don't know how to calculate metric space embedding for an object ",
-           "of type: ", paste(class(x), collapse = " ")))
+  stop(red("Don't know how to calculate metric space embedding with model ",
+           "of type: ", paste(class(model), collapse = " ")))
 }
 
 #' @importFrom keras get_weights
@@ -156,6 +168,10 @@ metric_space_embedding.default <- function(x, model, layer) {
 metric_space_embedding.dlr <- function(x, model, 
   layer = length(model$hidden_layers)) {
 
+  if (!inherits(x, "data.frame")) {
+    stop(red("Don't know how to embed an object of type: ",
+             paste(class(x), collapse = " ")))
+  }
   mm <- model.matrix(model$form, 
                      model.frame(model$form, 
                                  x[,model$var_desc$name,
@@ -194,7 +210,8 @@ plot_training_history.default <- function(x) {
 }
 
 #' @importFrom ggplot2 ggplot aes aes_ geom_point scale_shape theme_bw 
-#' theme_minimal
+#' theme_minimal geom_smooth facet_grid element_text scale_x_continuous theme
+#' element_blank element_rect
 #' @importFrom tools toTitleCase
 #' @export
 plot_training_history.dlr <- function(x, metrics = NULL, 
@@ -206,11 +223,7 @@ plot_training_history.dlr <- function(x, metrics = NULL,
       metrics <- Filter(function(name) !grepl("^val_", name),
           names(x$history$metrics))
   df <- df[df$metric %in% metrics, ]
-  if (tensorflow::tf_version() < "2.2") {
-      do_validation <- x$history$params$do_validation
-  } else {
-    do_validation <- any(grepl("^val_", names(x$history$metrics)))
-  }
+  do_validation <- any(grepl("^val_", names(x$history$metrics)))
   
   names(df) <- toTitleCase(names(df))
   df$Metric <- toTitleCase(as.character(df$Metric))
