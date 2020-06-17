@@ -21,8 +21,21 @@ dlr_predict.continuous_dlr <- function(data, dlr_model, type = NULL) {
   predict(dlr_model$model, mm)
 }
 
+#' @importFrom crayon red
 #' @export
-predict.dlr <- function(object, newdata, type = "factor") {
+predict.dlr <- function(object, ...) { #newdata, type = "factor") {
+  args <- list(...)
+  if ("newdata" %in% names(args)) {
+    newdata <- args$newdata
+  } else if (inherits(args[[1]], "data.frame")) {
+    newdata <- args[[1]]
+  } else {
+    stop(red("You must specify a newdata object to predict on."))
+  }
+  type <- "factor"
+  if ( "type" %in% names(args) ) {
+    type <- args$type
+  }
   dlr_predict(newdata, object, type)
 }
 
@@ -70,10 +83,12 @@ dlr <- function(data,
   check_at_least_one_indep_var(var_desc)
   conditional_not_yet_supported(var_desc)
   check_dependent_types(var_desc, c("numeric", "factor"))
-  check_hidden_layers
+  check_hidden_layers(hidden_layers, hidden_layers_activation)
 
   x_train <- model.matrix(form, xf)
   mm_column_var_assign <- attributes(x_train)$assign
+  column_var_name <- names(xf)
+  mm_column_var_name <- colnames(x_train)
 
   model <- keras_model_sequential(name = name) 
 
@@ -140,7 +155,9 @@ dlr <- function(data,
   ret <- list(form = form, 
               hidden_layers = hidden_layers, 
               hidden_layers_activation = hidden_layers_activation,
-              mm_column_var_assign <- mm_column_var_assign,
+              column_var_name = column_var_name,,
+              mm_column_var_name = mm_column_var_name,
+              mm_column_var_assign = mm_column_var_assign,
               loss = loss,
               var_desc = var_desc, 
               model = model, 
@@ -198,13 +215,13 @@ metric_space_embedding.dlr <- function(x, model,
 }
 
 #' @export
-plot_training_history <- function(x) {
+plot_training_history <- function(x, metrics, smooth, theme_bw) {
   UseMethod("plot_training_history", x)
 }
 
 #' @importFrom crayon red
 #' @export
-plot_training_history.default <- function(x) {
+plot_training_history.default <- function(x, metrics, smooth, theme_bw) {
   print(red("Don't know how to plot training history for an object of type:",
             paste(class(x), collapse = " ")))
 }

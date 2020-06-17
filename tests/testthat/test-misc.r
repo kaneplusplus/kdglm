@@ -4,7 +4,7 @@ fit_linear <- lm(Sepal.Length ~ ., iris)
 sd(iris$Sepal.Length - predict(fit_linear, iris))
 
 m1 <- dlr(iris, Sepal.Length ~ ., hidden_layers = c(24, 2),
-          verbose = TRUE, epochs = 1000)
+          verbose = FALSE, epochs = 1000)
 
 sd(iris$Sepal.Length - dlr_predict(iris, m1))
 
@@ -23,7 +23,7 @@ m2 <- dlr(iris,
           Species ~ ., 
           hidden_layers = c(24, 12),
           epochs = 1000,
-          verbose = TRUE)
+          verbose = FALSE)
 
 d <- latent_space_embedding(iris, m2) %>% 
   `colnames<-`(c("x1", "x2", "x3")) %>%

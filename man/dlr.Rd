@@ -8,7 +8,7 @@ dlr(
   data,
   form,
   hidden_layers = integer(),
-  activation = rep("linear", length(hidden_layers)),
+  hidden_layers_activation = rep("linear", length(hidden_layers)),
   categorical_loss = "mse",
   continuous_loss = "mse",
   optimizer = optimizer_adadelta(),
