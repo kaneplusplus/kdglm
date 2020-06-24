@@ -1,5 +1,5 @@
-Package: dlm
-Title: Deep Learning Models for Rectangular Data
+Package: dlrm
+Title: Deep Learning Regression Models for Rectangular Data
 Version: 0.0.1
 Authors@R: c(
   person(given = "Michael J.",
