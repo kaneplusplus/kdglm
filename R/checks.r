@@ -33,6 +33,7 @@ check_dependent_types <- function(x, dependent_types) {
 }
 
 #' @importFrom crayon red
+#' @export
 check_hidden_layers <- function(hidden_layers, hidden_layers_activation) {
   if (length(hidden_layers) != length(hidden_layers_activation)) {
     stop(red("hidden_layers and their activations must have the same length."))

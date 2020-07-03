@@ -98,12 +98,12 @@ dlr <- function(data,
                             units = hidden_layers[i],
                             activation = hidden_layers_activation[i],
                             name = paste("hidden_layer", i, sep = "_"),
-                            use_bias = FALSE)
+                            use_bias = TRUE)
     } else {
       model %>% layer_dense(units = hidden_layers[i], 
                             activation = hidden_layers_activation[i],
                             name = paste("hidden_layer", i, sep = "_"),
-                            use_bias = FALSE)
+                            use_bias = TRUE)
     }
   }
 
@@ -124,7 +124,7 @@ dlr <- function(data,
           input_shape = input_shape,
           name = paste(output_activation, "output", sep = "_"),
           activation = output_activation,
-          use_bias = FALSE) 
+          use_bias = TRUE) 
     
     type <- "categorical_dlr"
     loss <- categorical_loss
@@ -139,7 +139,7 @@ dlr <- function(data,
 
     model %>% 
       layer_dense(units = 1, input_shape = input_shape, 
-                  name = "linear_output", use_bias = FALSE)
+                  name = "linear_output", use_bias = TRUE)
 
     type <- "continuous_dlr"
     loss <- continuous_loss
@@ -204,10 +204,13 @@ metric_space_embedding.dlr <- function(x, model,
   } else {
     stop(red("Invalid layer."))
   }
-  last_weights <- get_weights(model$model)[[layer + 1]]
+  last_weights <- get_weights(model$model)[[2*(layer + 1) - 1]]
+  last_bias <- get_weights(model$model)[[2*(layer + 1)]]
   ret <- Reduce(cbind, 
-         Map(function(j) sweep(pmm, 2, last_weights[,j], FUN = `*`), 
-             seq_len(ncol(last_weights))))
+         Map(
+           function(j) {
+             cbind(sweep(pmm, 2, last_weights[,j], FUN = `*`), last_bias[j])
+           }, seq_len(ncol(last_weights))))
   dimnames(ret) <- NULL
   attributes(ret)$assign <- NULL
   attributes(ret)$contrasts <- NULL
