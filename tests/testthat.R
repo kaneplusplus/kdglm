@@ -1,4 +1,4 @@
 library(testthat)
-library(dlm)
+library(dlrm)
 
-test_check("dlm")
+test_check("dlrm")

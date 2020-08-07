@@ -3,15 +3,20 @@ context("Tests that need to be cleaned up.")
 fit_linear <- lm(Sepal.Length ~ ., iris)
 sd(iris$Sepal.Length - predict(fit_linear, iris))
 
-m1 <- dlr(iris, Sepal.Length ~ ., hidden_layers = c(24, 2),
-          verbose = FALSE, epochs = 1000)
+m1 <- dlr(iris, 
+          Sepal.Length ~ . - 1, 
+          hidden_layers = c(16, 2),
+          hidden_layers_activation = c("linear", "linear"),
+          verbose = TRUE, epochs = 1000)
+
+# tf$keras$utils$plot_model(m1$model, "test.png", show_shapes = TRUE)
 
 sd(iris$Sepal.Length - dlr_predict(iris, m1))
 
 library(dplyr)
 library(ggplot2)
 
-metric_space_embedding(iris, m1)[,-3] %>%
+metric_space_embedding(iris, m1) %>%
   `colnames<-`(c("x1", "x2")) %>%
   as_tibble() %>%
   mutate(species = iris$Species) %>%
@@ -39,4 +44,4 @@ dlr_predict(iris, m2)
 dlr_predict(iris, m2, type = "one-hot")
 
 
-expect_equal(predict(fit_dl1, iris), predict(fit_linear, iris))
+#expect_equal(predict(fit_dl1, iris), predict(fit_linear, iris))
