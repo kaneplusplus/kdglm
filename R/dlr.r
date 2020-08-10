@@ -75,7 +75,6 @@ survival_features <- function(time, event) {
 }
 
 
-#' @importFrom muhaz muhaz
 #' @importFrom fu dep_terms extract_vars indep_terms
 #' @importFrom crayon red
 #' @importFrom keras loss_mean_squared_error
@@ -85,7 +84,7 @@ dlcp <- function(data,
                  hidden_layers = integer(),
                  hidden_layers_activation = 
                   rep("linear", length(hidden_layers)),
-                 loss = loss_mean_squared_error,
+                 loss = neg_log_prop_haz_lik,
                  optimizer = optimizer_adadelta(),
                  metrics = c("mean_squared_error"),
                  batch_size = nrow(data),
@@ -102,6 +101,7 @@ dlcp <- function(data,
   xf <- model.frame(
     as.formula(paste("~", paste(c(surv_vars, indep_vars), collapse = " + "))), 
     data)
+
   
   # I just want the cleaned up data frame. I don't want the term attributes or else
   # I'll get an error when I try to make a model matrix with another formula.
@@ -114,19 +114,20 @@ dlcp <- function(data,
 
 
   # The Nelson-Aalen estimate of the hazard function.
-  haz <- muhaz(xf[[surv_vars[1]]], xf[[surv_vars[[2]]]],
-               n.est.grid = 2*nrow(xf),
-               bw.grid = xf[[surv_vars[1]]],
-               min.time = 0,
-               max.time = max(xf[[surv_vars[1]]]))
-  sf <- tibble(time = xf[[surv_vars[1]]],
-               hazard = approxfun(x = haz$est.grid, y = haz$haz.est)(time))
+  #haz <- muhaz(xf[[surv_vars[1]]], xf[[surv_vars[[2]]]],
+  #             n.est.grid = 2*nrow(xf),
+  #             bw.grid = xf[[surv_vars[1]]],
+  #             min.time = 0,
+  #             max.time = max(xf[[surv_vars[1]]]))
+  #sf <- tibble(time = xf[[surv_vars[1]]],
+  #             hazard = approxfun(x = haz$est.grid, y = haz$haz.est)(time))
 
   # TODO: refactor this. There is a lot of overlap with the dlr function.
   x_train <- model.matrix(form, xf)
   mm_column_var_assign <- attributes(x_train)$assign
   column_var_name <- names(xf)
   mm_column_var_name <- colnames(x_train)
+
 
   model <- 
     create_input_and_hidden_layers(
@@ -146,15 +147,14 @@ dlcp <- function(data,
                 use_bias = TRUE, activation = "exponential")
 
   type <- "hazard_dlr"
-  y_train <- as.matrix(sf[["hazard"]])
+  y_train <- matrix(c(xf[[surv_vars[1]]], xf[[surv_vars[2]]]), ncol = 2)
 
   mm_col_names <- colnames(x_train)
 
-  model %>% 
-    compile(loss = loss, optimizer = optimizer, metrics = metrics) 
+  compile(model, loss = loss, optimizer = optimizer, metrics = metrics) 
 
-  history <- model %>%
-    fit(x_train, y_train, batch_size = batch_size, epochs = epochs,
+  history <- 
+    fit(model, x_train, y_train, batch_size = batch_size, epochs = epochs,
         validation_split = validation_split, verbose = verbose)
 
   ret <- list(form = form, 

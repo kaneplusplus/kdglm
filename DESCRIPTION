@@ -15,8 +15,7 @@ Imports:
   fu,
   keras,
   crayon,
-  ggplot2,
-  survival
+  ggplot2
 Suggests: 
   testthat,
   dplyr,
