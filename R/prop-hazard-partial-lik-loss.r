@@ -1,12 +1,29 @@
 
 group_sum <- function(elem) {
-  ret <- k_variable(k_zeros(k_int_shape(elem)[[1]]))
-  k_set_value(ret[1], k_sum(elem))
-  tf$RaggedTensor$from_tensor(k_reshape(k_eval(ret), c(length(ret), 1)))
+#  a <- k_cast(k_reshape(k_sum(elem), c(1, 1) ), k_floatx())
+#  a <- tf$RaggedTensor$from_tensor(k_reshape(k_sum(elem), c(1, 1) ) )
+
+#  browser()
+#  nr <- k_constant(k_int_shape(elem)[1])
+#  ret <- tf$cond( 
+#    k_equal(nr, 1.),
+#      function() {
+#        a
+#      },
+#      function() {
+#        k_concatenate(
+#            list(a, k_zeros(c(k_shape(elem)[1] - 1L, 1L))), 1)
+#      })
+      
+
+#  print(ret)
+  tf$RaggedTensor$from_tensor(k_repeat_elements(k_reshape(k_sum(elem), c(1L, 1L)), 
+    k_shape(elem)[1], 0))
+
 }
 
-make_ordering <- function(vals) {
-  
+tf_identity <- function(elem) {
+  k_flatten(elem)
 }
 
 #' @importFrom keras k_sum k_log k_map_fn
@@ -20,20 +37,9 @@ neg_log_prop_haz_lik <- function(y_true, y_pred) {
   sorted_indices <- sv[1]
   sorted_status <- k_gather(y_status, sorted_indices)
   sorted_preds <- k_gather(y_pred, sorted_indices)
-  thetas <- k_exp(sorted_preds)
-
-  spl <- tf$unique(sorted_time)[1]
-  fixed_theta_sums <- 
-    tf$map_fn(group_sum, 
-            elems = tf$RaggedTensor$from_value_rowids(thetas, spl),
-            fn_output_signature=tf$RaggedTensorSpec(shape=NULL, 
-              ragged_rank = 1L, dtype = "float64"))
-  fixed_theta_sums <- unlist(tf$RaggedTensor$to_list(fixed_theta_sums))
-
-# The following was on the internet and it is not right.
-#  theta_sum <- k_cumsum(thetas)
-  theta_sum <- k_cumsum(fixed_theta_sums)
-  print(theta_sum)
+  thetas <- k_exp(sorted_preds) #k_exp(k_cast(sorted_preds, "float64"))
+  theta_sum <- k_cumsum(thetas)
+  sorted_status <- k_reshape(sorted_status, c(k_shape(sorted_status)[1], 1L))
   -k_sum(k_cast(sorted_status, k_dtype(sorted_preds)) * sorted_preds - k_log(theta_sum))
 }
 

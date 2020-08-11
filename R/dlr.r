@@ -84,9 +84,11 @@ dlcp <- function(data,
                  hidden_layers = integer(),
                  hidden_layers_activation = 
                   rep("linear", length(hidden_layers)),
+                 use_bias = rep(TRUE, length(hidden_layers)),
                  loss = neg_log_prop_haz_lik,
                  optimizer = optimizer_adadelta(),
                  metrics = c("mean_squared_error"),
+                 output_activation = "linear",
                  batch_size = nrow(data),
                  epochs = 1000,
                  verbose = FALSE,
@@ -144,7 +146,7 @@ dlcp <- function(data,
 
   model %>%
     layer_dense(units = 1, input_shape = input_shape, name = "hazard_output",
-                use_bias = TRUE, activation = "exponential")
+                use_bias = TRUE, activation = output_activation)
 
   type <- "hazard_dlr"
   y_train <- matrix(c(xf[[surv_vars[1]]], xf[[surv_vars[2]]]), ncol = 2)
@@ -153,8 +155,8 @@ dlcp <- function(data,
 
   compile(model, loss = loss, optimizer = optimizer, metrics = metrics) 
 
-  history <- 
-    fit(model, x_train, y_train, batch_size = batch_size, epochs = epochs,
+  history <- model %>%
+    fit(x_train, y_train, batch_size = batch_size, epochs = epochs,
         validation_split = validation_split, verbose = verbose)
 
   ret <- list(form = form, 
