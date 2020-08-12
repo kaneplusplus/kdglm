@@ -32,15 +32,20 @@ neg_log_prop_haz_lik <- function(y_true, y_pred) {
   y_time <- y_true[, 1]
   y_status <- y_true[, 2]
   nr <- k_shape(y_true)[1]
+#  y_pred <- y_pred / k_cast(nr, k_dtype(y_pred))
   sv <- tf$math$top_k(y_time, nr, TRUE)
   sorted_time <- sv[0]
   sorted_indices <- sv[1]
   sorted_status <- k_gather(y_status, sorted_indices)
-  sorted_preds <- k_gather(y_pred, sorted_indices)
+  sorted_preds <- k_cast(k_gather(y_pred, sorted_indices), "float64")
   thetas <- k_exp(sorted_preds) #k_exp(k_cast(sorted_preds, "float64"))
   theta_sum <- k_cumsum(thetas)
   sorted_status <- k_reshape(sorted_status, c(k_shape(sorted_status)[1], 1L))
-  -k_sum(k_cast(sorted_status, k_dtype(sorted_preds)) * sorted_preds - k_log(theta_sum))
+  k_max(
+    list(
+      -k_sum(k_cast(sorted_status, k_dtype(sorted_preds)) * sorted_preds -
+                    k_log(theta_sum)),
+      -1.e6))
 }
 
 neg_log_prop_haz_lik_ref <- function(y_true, y_pred) {

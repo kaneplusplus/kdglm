@@ -84,16 +84,17 @@ dlcp <- function(data,
                  hidden_layers = integer(),
                  hidden_layers_activation = 
                   rep("linear", length(hidden_layers)),
-                 use_bias = rep(TRUE, length(hidden_layers)),
+                 use_bias = rep(FALSE, length(hidden_layers)),
                  loss = neg_log_prop_haz_lik,
                  optimizer = optimizer_adadelta(),
-                 metrics = c("mean_squared_error"),
+                 metrics = neg_log_prop_haz_lik,
                  output_activation = "linear",
                  batch_size = nrow(data),
                  epochs = 1000,
                  verbose = FALSE,
                  validation_split = 0.2,
                  name = NULL,
+                 zero_weights = TRUE,
                  ...) {
 
   # Get the time and event variables to create the hazard function.
@@ -125,7 +126,7 @@ dlcp <- function(data,
   #             hazard = approxfun(x = haz$est.grid, y = haz$haz.est)(time))
 
   # TODO: refactor this. There is a lot of overlap with the dlr function.
-  x_train <- model.matrix(form, xf)
+  x_train <- model.matrix(form, xf)[,-1]
   mm_column_var_assign <- attributes(x_train)$assign
   column_var_name <- names(xf)
   mm_column_var_name <- colnames(x_train)
@@ -142,11 +143,12 @@ dlcp <- function(data,
   input_shape <- NULL
   if (length(hidden_layers) == 0) {
     input_shape <- ncol(x_train)
-  }
+  } 
 
   model %>%
     layer_dense(units = 1, input_shape = input_shape, name = "hazard_output",
-                use_bias = TRUE, activation = output_activation)
+                use_bias = FALSE, activation = output_activation,
+                kernel_initializer = "random_normal")
 
   type <- "hazard_dlr"
   y_train <- matrix(c(xf[[surv_vars[1]]], xf[[surv_vars[2]]]), ncol = 2)

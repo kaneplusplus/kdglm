@@ -11,12 +11,16 @@ create_input_and_hidden_layers <-
                             units = hidden_layers[i],
                             activation = hidden_layers_activation[i],
                             name = paste("hidden_layer", i, sep = "_"),
-                            use_bias = use_bias[i])
+                            use_bias = use_bias[i],
+                            trainable = TRUE,
+                            kernel_initializer = "random_normal")
     } else {
       model %>% layer_dense(units = hidden_layers[i],
                             activation = hidden_layers_activation[i],
                             name = paste("hidden_layer", i, sep = "_"),
-                            use_bias = use_bias[i])
+                            use_bias = use_bias[i],
+                            trainable = TRUE,
+                            kernel_initializer = "random_normal")
     }
   }
   model

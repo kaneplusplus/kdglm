@@ -11,10 +11,10 @@ surv <- survfit(Surv(time, status), data = lung)
 
 cox_fit <- coxph(Surv(time, status) ~ age + sex, data = lung)
 
+library(keras)
 library(devtools)
 library(survival)
 library(tensorflow)
-library(keras)
 library(dplyr)
 document()
 data(lung)
@@ -27,13 +27,15 @@ lung <- lung %>%
 tf$config$run_functions_eagerly(TRUE)
 dc_fit <- dlcp(
   lung, 
-  Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + 
-    meal.cal + wt.loss, 
-#  hidden_layers = c(5, 2),
-#  hidden_layers_activation = c("sigmoid", "linear"),
-  output_activation = "linear",
-  verbose = TRUE, epochs=10,
-  optimizer = "sgd")
+  Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog, 
+  hidden_layers = c(16),
+  hidden_layers_activation = c("linear"),
+  verbose = TRUE, 
+  epochs = 100,
+  validation_split = .2)
+get_weights(dc_fit$model)
+coxph(Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog, lung)
+plot(dc_fit$history)
 
 lung_na <- na.omit(lung)
 
