@@ -45,7 +45,7 @@ neg_log_prop_haz_lik <- function(y_true, y_pred) {
     list(
       -k_sum(k_cast(sorted_status, k_dtype(sorted_preds)) * sorted_preds -
                     k_log(theta_sum)),
-      -1.e6))
+      -10.e6))
 }
 
 neg_log_prop_haz_lik_ref <- function(y_true, y_pred) {
