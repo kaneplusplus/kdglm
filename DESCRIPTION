@@ -15,7 +15,9 @@ Imports:
   fu,
   keras,
   crayon,
-  ggplot2
+  ggplot2,
+  keras,
+  tensorflow
 Suggests: 
   testthat,
   dplyr,
