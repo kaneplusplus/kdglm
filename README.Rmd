@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# dlm
+# dlrm
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
@@ -35,7 +35,7 @@ devtools::install_github("kaneplusplus/dlm")
 
 ```{r}
 library(keras)
-library(dlm)
+library(dlrm)
 
 # Regress iris variables onto Species (categorical) and get the accuracy.
 fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16, epochs = 2000)
@@ -56,9 +56,40 @@ fit_dlmc <- dlr(iris, Sepal.Length ~., hidden_layers = c(24, 2))
 sd(iris$Sepal.Length - dlr_predict(iris, fit_dlmc))
 ```
 
-## Visualize the iris data in latent position from the first regression
+## A deep survival analysis
 
-```{r}
+```{r survival}
+library(survival)
+library(dplyr)
+
+data(lung)
+
+# Handle the categorical variables in lung
+lung <- lung %>%
+  mutate(status = status - 1,
+         sex = as.factor(sex),
+         ph.ecog = as.factor(ph.ecog))
+
+# Fit the deep survival model.
+dc_fit <- dlcp(
+  lung,
+  Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog,
+  epochs = 150,
+  validation_split = .2)
+
+dl_weights <- get_weights(dc_fit$model)[[1]]
+
+# Compare the deep survival model coefficients to coxph.
+cfit <- summary(coxph(Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog, lung))$conf.int
+comp <- round(cbind(dl_weights, log(cfit)[,-2]), 3)
+colnames(comp) <- c("Deep Learner Coefs", "Cox Coef", "Cox Lower .95", "Cox Upper .95")
+comp
+
+# Plot the training history.
+plot_training_history(dc_fit)
+```
+
+```{r echo = FALSE, eval = FALSE}
 library(ggplot2)
 library(dplyr)
 

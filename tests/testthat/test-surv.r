@@ -28,10 +28,10 @@ tf$config$run_functions_eagerly(TRUE)
 dc_fit <- dlcp(
   lung, 
   Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog, 
-  hidden_layers = c(16),
-  hidden_layers_activation = c("linear"),
+#  hidden_layers = c(16),
+#  hidden_layers_activation = c("linear"),
   verbose = TRUE, 
-  epochs = 100,
+  epochs = 500,
   validation_split = .2)
 get_weights(dc_fit$model)
 coxph(Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog, lung)
