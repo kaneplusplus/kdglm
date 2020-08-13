@@ -30,7 +30,7 @@ Regression onto a categorical variable
     # Regress iris variables onto Species (categorical) and get the accuracy.
     fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16, epochs = 2000)
     sum(iris$Species == dlr_predict(iris, fit_dlmcat)) / nrow(iris)
-    #> [1] 0.9466667
+    #> [1] 0.94
 
 Regression onto a continous variable
 ------------------------------------
@@ -45,7 +45,7 @@ Regression onto a continous variable
     # with 24 and 2 nodes respectively.
     fit_dlmc <- dlr(iris, Sepal.Length ~., hidden_layers = c(24, 2))
     sd(iris$Sepal.Length - dlr_predict(iris, fit_dlmc))
-    #> [1] 0.3136367
+    #> [1] 0.3141947
 
 A deep survival analysis
 ------------------------
@@ -84,13 +84,13 @@ A deep survival analysis
     colnames(comp) <- c("Deep Learner Coefs", "Cox Coef", "Cox Lower .95", "Cox Upper .95")
     comp
     #>          Deep Learner Coefs Cox Coef Cox Lower .95 Cox Upper .95
-    #> sex2                 -0.171   -0.535        -0.926        -0.143
-    #> age                  -0.105    0.008        -0.015         0.030
+    #> sex2                 -0.383   -0.535        -0.926        -0.143
+    #> age                  -0.130    0.008        -0.015         0.030
     #> meal.cal             -0.002    0.000        -0.001         0.000
     #> wt.loss              -0.021   -0.012        -0.027         0.003
-    #> ph.ecog1             -0.123    0.336        -0.122         0.793
-    #> ph.ecog2             -0.071    1.002         0.429         1.576
-    #> ph.ecog3              0.172    2.086         0.030         4.141
+    #> ph.ecog1             -0.214    0.336        -0.122         0.793
+    #> ph.ecog2              0.225    1.002         0.429         1.576
+    #> ph.ecog3              0.232    2.086         0.030         4.141
 
     # Plot the training history.
     plot_training_history(dc_fit)
