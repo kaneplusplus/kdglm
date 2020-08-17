@@ -1,5 +1,5 @@
-Package: dlrm
-Title: Deep Learning Regression Models for Rectangular Data
+Package: dglm
+Title: Deep Versions of Generalized Linear Models (including Proportional Hazard)
 Version: 0.0.1
 Authors@R: c(
   person(given = "Michael J.",
