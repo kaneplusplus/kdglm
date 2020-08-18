@@ -14,10 +14,10 @@ lung <- lung %>%
          sex = as.factor(sex),
          ph.ecog = as.factor(ph.ecog))
 
-tf$config$run_functions_eagerly(TRUE)
+#tf$config$run_functions_eagerly(TRUE)
 dc_fit <- dcoxph(
   lung, 
-  Surv(time, status) ~ sex + age + wt.loss,
+  Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog, 
 #  hidden_layers = c(6),
 #  hidden_layers_activation = c("sigmoid"),
   verbose = TRUE, 
@@ -29,4 +29,4 @@ cph <- coxph(Surv(time, status) ~ sex + age + meal.cal + wt.loss + ph.ecog,
 
 plot(dc_fit$history)
 
-predict(dc_fit$model, lung)
+predict(dc_fit, lung)
