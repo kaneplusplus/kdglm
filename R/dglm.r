@@ -10,6 +10,8 @@ dglm <- function(data,
                  hidden_layers = integer(), 
                  hidden_layers_activation = 
                    rep("linear", length(hidden_layers)),
+                 hidden_layer_names = 
+                   paste("hidden_layer", seq_along(hidden_layers), sep = "_"),
                  use_bias = rep(TRUE, length(hidden_layers)),
                  loss = NULL,
                  optimizer = optimizer_adadelta(),
@@ -20,6 +22,7 @@ dglm <- function(data,
                  epochs = 1000,
                  verbose = FALSE,
                  validation_split = 0.2,
+                 count_model = FALSE,
                  name = NULL) {
 
   xf <- model.frame(formula, data)
@@ -44,6 +47,7 @@ dglm <- function(data,
       x_train, 
       hidden_layers,
       hidden_layers_activation,
+      hidden_layer_names,
       use_bias,
       name)
 

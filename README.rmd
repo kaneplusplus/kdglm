@@ -13,23 +13,51 @@ knitr::opts_chunk$set(
 )
 ```
 
-# dlrm
+# Overview
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 <!-- badges: end -->
 
-The goal of dlm is to ...
+The {dglm} package provide "deep" versions of (generalized) linear models with an interface that is designed to follow those of standard regression routines (`lm()`, `glm()`, and `coxph()`) as closely as possible while providing the ability to fit non-linear relationships among data. The package implements these model fitting routines through two functions that prepend a "d" in front of their linear-model analogues.
 
-## Installation
+- `dglm()` regress variables onto count, continuous, or categorical variables.
+- `dcoxph()` regress variables onto survival data.
 
-You can install the development version of this package from 
-[GitHub](https://github.com/) with:
+In addition common associated methods including `summary()`, `update()`, and `predict()` are implemented along with others to facilitate the validating, examining, characterizing, updating, and predicting with these models.
+
+# Approach
+
+Deep learners, regressing tensors of order two (matrics) onto tensors of order one (vectors), can be thought of as non-linear generalizations of linear models. For example, consider the linear model:
+
+$$
+y_i = x_{i1} \, \beta_1 \ + \ x_{i2} \, \beta_2 \ + \ x_{i3} \, \beta_3 + \ ...
+$$
+
+We can rewrite this as
+
+$$
+y_i = f_0 \left(\, x_{i \cdot} \, \right)
+$$
+
+where $f_0$ is a linear combination of the values in the vector $x_{i\cdot}$ -- a deep learner with no hidden layers. Likewise, a logistic regression can be written as:
+
+$$
+\log \left( \ y_i \ / \ (1-y_i) \ \right) = f_0 \left( \, x_{i \cdot} \, \right)
+$$
+
+where $y_i$ is a zero-one variable. Any generalized linear model, including survival models, fits into a similar construction and we can extend these models to capture non-linear predictive information with respect to the dependent variable.
+
+# Installation
+
+The package is not currently available on [CRAN](https://cran.r-project.org/) but you can install the development version of this package from 
+[GitHub](https://github.com/) with the following code
 
 ``` r
-# install.packages("devtools")
 devtools::install_github("kaneplusplus/dlm")
 ```
+
+# Examples with the `penguins` data set
 
 ## Regression onto a categorical variable
 
@@ -38,7 +66,7 @@ library(keras)
 library(dlrm)
 
 # Regress iris variables onto Species (categorical) and get the accuracy.
-fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16, epochs = 2000)
+fit_dlmcat <- dlr(iris, Species ~ ., hidden_layers = 16, epochs = 100)
 sum(iris$Species == dlr_predict(iris, fit_dlmcat)) / nrow(iris)
 ```
 

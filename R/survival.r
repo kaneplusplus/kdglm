@@ -58,9 +58,9 @@ dcoxph <- function(data,
   error_on_conditional_var(var_desc)
   error_on_bad_hidden_layer_desc(hidden_layers, hidden_layers_activation)
 
-  if (any(!(xf[[surv_vars[2]]] in c(0, 1)))) {
+  if (any(!(xf[[surv_vars[2]]] %in% c(0, 1)))) {
     stop(red("Event variables should be 0 if right censored or 1 if an event",
-             "took place."K))
+             "took place."))
   }
 
   # The Nelson-Aalen estimate of the hazard function.

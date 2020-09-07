@@ -7,7 +7,7 @@ Authors@R: c(
          email = "michael.kane@yale.edu",
          role = c("aut", "cre"),
          comment = c(ORCID = "http://orcid.org/0000-0003-1899-6662")))
-Description: Package dlm implements easily configurable, commonly used deep learning for rectangular data.
+Description: Package dlm implements easily configurable, commonly used deep learning for rectangular independent data (tensor order = 2) and vector dependent values (tensor order = 1).
 License: Apache License (>= 2.0)
 Encoding: UTF-8
 LazyData: true
@@ -20,8 +20,7 @@ Imports:
   tensorflow
 Suggests: 
   testthat,
-  dplyr,
-  threejs
+  dplyr
 RoxygenNote: 7.1.1
 Remotes:
   kaneplusplus/fu

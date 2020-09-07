@@ -13,7 +13,9 @@ make_model_matrix <- function(form, x) {
 }
 
 create_input_and_hidden_layers <- 
-  function(x_train, hidden_layers, hidden_layers_activation, use_bias, 
+  function(x_train, hidden_layers, hidden_layers_activation, 
+           hidden_layer_names,
+           use_bias, 
            model_name) {
   
   model <- keras_model_sequential(name = model_name)
